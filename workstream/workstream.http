@@ -1,0 +1,6 @@
+@workstream_HostAddress = http://localhost:5017
+
+GET {{workstream_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

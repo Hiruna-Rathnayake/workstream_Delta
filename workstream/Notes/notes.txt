@@ -1,0 +1,11 @@
+Relationships Explanation:
+Tenant - User: One tenant can have many users (one-to-many relationship). Each user belongs to a single tenant, identified by TenantId.
+Role - User: A role can be assigned to multiple users, but each user only has one role (many-to-one relationship).
+Role - Permission: Roles can have multiple permissions, and permissions can be assigned to multiple roles (many-to-many relationship through the RolePermission entity).
+InventoryItem - Stock: An inventory item can have many stock entries (one-to-many relationship). Each stock entry is linked to a specific inventory item.
+Customer - Order: A customer can place many orders (one-to-many relationship). Each order is linked to one customer.
+InventoryItem - Order: Each order involves one inventory item (many-to-one relationship).
+
+
+dotnet ef migrations add permbug1 --project workstream
+dotnet ef database update --project workstream
