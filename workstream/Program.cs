@@ -22,6 +22,7 @@ builder.Services.AddLogging(logging =>
     logging.SetMinimumLevel(LogLevel.Information);
 });
 
+
 // Add services to the container.
 builder.Services.AddControllers();
 

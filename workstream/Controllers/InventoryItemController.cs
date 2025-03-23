@@ -172,7 +172,7 @@ namespace workstream.Controllers
                 if (isDeleted)
                 {
                     _logger.LogInformation("\x1b[33mInventory item {ItemId} deleted for tenant {TenantId}.\x1b[0m", itemId, tenantId);
-                    return NoContent();
+                    return Ok(new { message = "Item deleted successfully" });
                 }
 
                 _logger.LogWarning("\x1b[33mInventory item {ItemId} not found for tenant {TenantId}.\x1b[0m", itemId, tenantId);

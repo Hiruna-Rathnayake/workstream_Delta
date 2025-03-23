@@ -35,11 +35,16 @@ namespace workstream.Controllers
                 return BadRequest("Customer data cannot be null.");
             }
 
-            var tenantId = _jwtService.GetTenantIdFromToken(Request.Headers["Authorization"].ToString().Replace("Bearer ", "")); // Extract tenantId from token
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            if (!await _jwtService.UserHasPermissionAsync(token, "CustomerManagement"))
+            {
+                return Forbid("Insufficient permissions.");
+            }
+
+            var tenantId = _jwtService.GetTenantIdFromToken(token); // Extract tenantId from token
             _logger.LogInformation("Creating customer for tenant {TenantId}.", tenantId);
 
             var customer = _mapper.Map<Customer>(customerWriteDTO); // Mapping DTO to Model
-
             customer.TenantId = tenantId;
 
             var createdCustomer = await _customerRepo.CreateCustomerAsync(customer); // Use only the customer object, no need for tenantId
@@ -49,12 +54,17 @@ namespace workstream.Controllers
             return CreatedAtAction(nameof(GetCustomerById), new { customerId = createdCustomer.CustomerId }, customerReadDTO);
         }
 
-
         // Get Customer by ID
         [HttpGet("{customerId}")]
         public async Task<ActionResult<CustomerReadDTO>> GetCustomerById(int customerId)
         {
-            var tenantId = _jwtService.GetTenantIdFromToken(Request.Headers["Authorization"].ToString().Replace("Bearer ", "")); // Extract tenantId from token
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            if (!await _jwtService.UserHasPermissionAsync(token, "CustomerManagement"))
+            {
+                return Forbid("Insufficient permissions.");
+            }
+
+            var tenantId = _jwtService.GetTenantIdFromToken(token); // Extract tenantId from token
             _logger.LogInformation("Fetching customer {CustomerId} for tenant {TenantId}.", customerId, tenantId);
 
             try
@@ -75,7 +85,13 @@ namespace workstream.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerReadDTO>>> GetAllCustomers()
         {
-            var tenantId = _jwtService.GetTenantIdFromToken(Request.Headers["Authorization"].ToString().Replace("Bearer ", "")); // Extract tenantId from token
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            if (!await _jwtService.UserHasPermissionAsync(token, "CustomerManagement"))
+            {
+                return Forbid("Insufficient permissions.");
+            }
+
+            var tenantId = _jwtService.GetTenantIdFromToken(token); // Extract tenantId from token
             _logger.LogInformation("Fetching all customers for tenant {TenantId}.", tenantId);
 
             try
@@ -96,7 +112,13 @@ namespace workstream.Controllers
         [HttpDelete("{customerId}")]
         public async Task<ActionResult> SoftDeleteCustomer(int customerId)
         {
-            var tenantId = _jwtService.GetTenantIdFromToken(Request.Headers["Authorization"].ToString().Replace("Bearer ", "")); // Extract tenantId from token
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            if (!await _jwtService.UserHasPermissionAsync(token, "CustomerManagement"))
+            {
+                return Forbid("Insufficient permissions.");
+            }
+
+            var tenantId = _jwtService.GetTenantIdFromToken(token); // Extract tenantId from token
             _logger.LogInformation("Deleting customer {CustomerId} for tenant {TenantId}.", customerId, tenantId);
 
             try
@@ -126,7 +148,13 @@ namespace workstream.Controllers
                 return BadRequest("Customer data cannot be null.");
             }
 
-            var tenantId = _jwtService.GetTenantIdFromToken(Request.Headers["Authorization"].ToString().Replace("Bearer ", "")); // Extract tenantId from token
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            if (!await _jwtService.UserHasPermissionAsync(token, "CustomerManagement"))
+            {
+                return Forbid("Insufficient permissions.");
+            }
+
+            var tenantId = _jwtService.GetTenantIdFromToken(token); // Extract tenantId from token
             _logger.LogInformation("Updating customer {CustomerId} for tenant {TenantId}.", customerId, tenantId);
 
             try

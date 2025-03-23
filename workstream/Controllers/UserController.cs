@@ -44,26 +44,25 @@ namespace workstream.Controllers
 
             try
             {
-                // Get the token from the Authorization header
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
-                // Extract TenantId from the token
+                if (!await _jwtService.UserHasPermissionAsync(token, "UserManagement"))
+                {
+                    return Forbid("Insufficient permissions.");
+                }
+
                 var tenantId = _jwtService.GetTenantIdFromToken(token);
-                if (tenantId == 0)  
+                if (tenantId == 0)
                 {
                     return Unauthorized("Invalid or missing tenant information.");
                 }
 
-                // Map DTO to Model and assign TenantId
                 var user = _mapper.Map<User>(userDTO);
-                user.TenantId = tenantId; // Ensure the user is linked to the correct tenant
+                user.TenantId = tenantId;
 
                 await _userRepo.CreateUserAsync(user);
 
-                // Map back to DTO for returning
                 var userReadDTO = _mapper.Map<UserReadDTO>(user);
-
-                //return CreatedAtAction(nameof(GetUserByIdAsync), new { userId = user.UserId }, userReadDTO);
                 return Ok(new { Message = "User created successfully.", User = userReadDTO });
             }
             catch (ArgumentNullException ex)
@@ -76,22 +75,20 @@ namespace workstream.Controllers
             }
         }
 
-
         [HttpGet]
         public async Task<IActionResult> GetAllUsersAsync()
         {
             try
             {
-                // Get the token from the Authorization header
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
-                // Get TenantId from the token using JwtService
+                if (!await _jwtService.UserHasPermissionAsync(token, "UserManagement"))
+                {
+                    return Forbid("Insufficient permissions.");
+                }
+
                 var tenantId = _jwtService.GetTenantIdFromToken(token);
-
-                // Get users filtered by TenantId
                 var users = await _userRepo.GetAllUsersAsync(tenantId);
-
-                // Map users to DTOs if necessary
                 var userReadDTOs = _mapper.Map<IEnumerable<UserReadDTO>>(users);
 
                 return Ok(userReadDTOs);
@@ -108,16 +105,20 @@ namespace workstream.Controllers
         {
             try
             {
-                var user = await _userRepo.GetUserByIdAsync(userId);
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
+                if (!await _jwtService.UserHasPermissionAsync(token, "UserManagement"))
+                {
+                    return Forbid("Insufficient permissions.");
+                }
+
+                var user = await _userRepo.GetUserByIdAsync(userId);
                 if (user == null)
                 {
                     return NotFound($"User with ID {userId} not found.");
                 }
 
-                // Map model to DTO for returning
                 var userReadDTO = _mapper.Map<UserReadDTO>(user);
-
                 return Ok(userReadDTO);
             }
             catch (KeyNotFoundException ex)
@@ -141,12 +142,15 @@ namespace workstream.Controllers
 
             try
             {
-                // Map DTO to Model
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+                if (!await _jwtService.UserHasPermissionAsync(token, "UserManagement"))
+                {
+                    return Forbid("Insufficient permissions.");
+                }
+
                 var updatedUser = _mapper.Map<User>(updatedUserDTO);
-
                 var result = await _userRepo.UpdateUserAsync(userId, updatedUser);
-
-                // Map back to DTO for returning
                 var userReadDTO = _mapper.Map<UserReadDTO>(result);
 
                 return Ok(userReadDTO);
@@ -171,8 +175,14 @@ namespace workstream.Controllers
         {
             try
             {
-                var result = await _userRepo.DeleteUserAsync(userId);
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
 
+                if (!await _jwtService.UserHasPermissionAsync(token, "UserManagement"))
+                {
+                    return Forbid("Insufficient permissions.");
+                }
+
+                var result = await _userRepo.DeleteUserAsync(userId);
                 if (!result)
                 {
                     return NotFound($"User with ID {userId} not found.");

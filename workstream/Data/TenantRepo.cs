@@ -47,12 +47,29 @@ public class TenantRepo
                 _context.Roles.AddRange(roles);
                 await _context.SaveChangesAsync();  // Save roles
 
-                // Step 3: Get Owner Role from the list directly
+                // Fetch all existing permissions
+                var permissions = await _context.Permissions.ToListAsync();
+                if (!permissions.Any())
+                {
+                    throw new InvalidOperationException("No default permissions found in the database.");
+                }
+
+                // Assign all permissions to the "Owner" role (full access)
                 var ownerRole = roles.FirstOrDefault(r => r.Name == "Owner");
                 if (ownerRole == null)
                 {
                     throw new InvalidOperationException("Owner role not found in roles list.");
                 }
+
+                var rolePermissions = permissions.Select(p => new RolePermission
+                {
+                    RoleId = ownerRole.RoleId,
+                    TenantId = tenant.TenantId,
+                    PermissionId = p.PermissionId
+                }).ToList();
+
+                _context.RolePermissions.AddRange(rolePermissions);
+                await _context.SaveChangesAsync(); // Save role-permission assignments
 
                 // Step 4: Create User and assign the "Owner" role
                 var user = new User
@@ -66,16 +83,15 @@ public class TenantRepo
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();  // Save user
 
-
                 return tenant;
             }
             catch (Exception roleCreationEx)
             {
-                // If role creation fails, clean up tenant
+                // If role or permission assignment fails, clean up tenant
                 _context.Tenants.Remove(tenant);
                 await _context.SaveChangesAsync();  // Rollback tenant creation
 
-                throw new InvalidOperationException("Error occurred while creating roles or assigning roles to user.", roleCreationEx);
+                throw new InvalidOperationException("Error occurred while creating roles or assigning permissions.", roleCreationEx);
             }
         }
         catch (Exception tenantCreationEx)
@@ -84,6 +100,7 @@ public class TenantRepo
             throw new InvalidOperationException("Error occurred while creating tenant.", tenantCreationEx);
         }
     }
+
 
 
     // Read a single Tenant by ID
